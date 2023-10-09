@@ -102,4 +102,4 @@ if __name__ == "__main__":
         assert args.checkpoint_num is not None
         assert args.inference_path is not None
         assert args.text is not None
-        main(args)
+    main(args)
