@@ -4,7 +4,7 @@ This repository contains the code for training video policies presented in our w
 
 [website](https://flow-diffusion.github.io/) | [arXiv]() | [paper]()
 
-![](teaserv3.mp4)
+![](teaser_v3.mp4)
 
 ## Getting started  
 
