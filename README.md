@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 ## Dataset structure
 
-We contain example dataset structure in `datasets/`.   
+This repo contains example dataset structure in `datasets/`.   
 
 The pytorch dataset and dataloaders are defined in `flowdiffusion/datasets.py`
 
