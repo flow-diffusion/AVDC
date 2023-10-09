@@ -23,6 +23,13 @@ pip install -r requirements.txt
 ```
 
 
+## Dataset structure
+
+We contain example dataset structure in `datasets/`.   
+
+The pytorch dataset and dataloaders are defined in `flowdiffusion/datasets.py`
+
+
 ## Training models
 
 For Meta-World experiments, run
@@ -31,6 +38,7 @@ cd flowdiffusion
 python train_mw.py --mode train
 # or python train_mw.py -m train
 ```
+
 or run with `accelerate`
 ```bash
 accelerate launch train_mw.py
@@ -58,10 +66,6 @@ For example:
 ```bash
 python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly
 ```
-
-
-
-
 
 
 ## Acknowledgements
