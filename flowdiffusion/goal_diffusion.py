@@ -29,11 +29,8 @@ from pytorch_fid.fid_score import calculate_frechet_distance
 import matplotlib.pyplot as plt
 import numpy as np
 
-from flow_viz import flow_tensor_to_image
-
-# from denoising_diffusion_pytorch.version import __version__
 __version__ = "0.0"
-# from flow_viz import flow_to_image, flow_tensor_to_image
+
 import os
 
 from pynvml import *
@@ -47,7 +44,6 @@ def print_gpu_utilization():
 import tensorboard as tb
 
 # constants
-
 ModelPrediction =  namedtuple('ModelPrediction', ['pred_noise', 'pred_x_start'])
 
 # helpers functions
@@ -438,7 +434,7 @@ class GoalGaussianDiffusion(nn.Module):
 
         maybe_clipped_snr = snr.clone()
         if min_snr_loss_weight:
-            maybe_clipped_snr.clamp_(min = min_snr_gamma)
+            maybe_clipped_snr.clamp_(max = min_snr_gamma)
 
         if objective == 'pred_noise':
             register_buffer('loss_weight', maybe_clipped_snr / snr)
@@ -487,7 +483,7 @@ class GoalGaussianDiffusion(nn.Module):
 
     def model_predictions(self, x, t, x_cond, task_embed,  clip_x_start=False, rederive_pred_noise=False):
         # task_embed = self.text_encoder(goal).last_hidden_state
-        model_output = self.model(torch.cat([x, x_cond], dim=1), t, task_embed)["sample"]
+        model_output = self.model(torch.cat([x, x_cond], dim=1), t, task_embed)
         maybe_clip = partial(torch.clamp, min = -1., max = 1.) if clip_x_start else identity
 
         if self.objective == 'pred_noise':
@@ -644,7 +640,7 @@ class GoalGaussianDiffusion(nn.Module):
 
         # predict and take gradient step
 
-        model_out = self.model(torch.cat([x, x_cond], dim=1), t, task_embed)["sample"]
+        model_out = self.model(torch.cat([x, x_cond], dim=1), t, task_embed)
 
         if self.objective == 'pred_noise':
             target = noise
@@ -712,7 +708,8 @@ class Trainer(object):
         diffusion_model,
         tokenizer, 
         text_encoder, 
-        dataset,
+        train_set,
+        valid_set,
         channels = 3,
         *,
         train_batch_size = 1,
@@ -725,7 +722,7 @@ class Trainer(object):
         ema_decay = 0.995,
         adam_betas = (0.9, 0.99),
         save_and_sample_every = 1000,
-        num_samples = 16,
+        num_samples = 3,
         results_folder = './results',
         amp = True,
         fp16 = True,
@@ -733,8 +730,11 @@ class Trainer(object):
         convert_image_to = None,
         calculate_fid = True,
         inception_block_idx = 2048, 
+        cond_drop_chance=0.1,
     ):
         super().__init__()
+
+        self.cond_drop_chance = cond_drop_chance
 
         self.tokenizer = tokenizer
         self.text_encoder = text_encoder
@@ -766,7 +766,7 @@ class Trainer(object):
 
         # sampling and training hyperparameters
 
-        assert has_int_squareroot(num_samples), 'number of samples must have an integer square root'
+        # assert has_int_squareroot(num_samples), 'number of samples must have an integer square root'
         self.num_samples = num_samples
         self.save_and_sample_every = save_and_sample_every
 
@@ -779,15 +779,11 @@ class Trainer(object):
 
         # dataset and dataloader
 
-        # self.ds = Dataset(folder, self.image_size, augment_horizontal_flip = augment_horizontal_flip, convert_image_to = convert_image_to)
-        ### sample 16 images for validation
-        N = len(dataset)
-        valid_ind = [i for i in range(N) if i % (N//num_samples) == 0][:num_samples]
-        train_ind = [i for i in range(N) if i not in valid_ind]
-        assert len(valid_ind) == num_samples
+        
+        valid_ind = [i for i in range(len(valid_set))][:num_samples]
 
-        train_set = Subset(dataset, train_ind)
-        valid_set = Subset(dataset, valid_ind)
+        train_set = train_set
+        valid_set = Subset(valid_set, valid_ind)
 
         self.ds = train_set
         self.valid_ds = valid_set
@@ -809,7 +805,7 @@ class Trainer(object):
             self.ema.to(self.device)
 
         self.results_folder = Path(results_folder)
-        self.results_folder.mkdir(exist_ok = True)
+        self.results_folder.mkdir(exist_ok = True, parents = True)
 
         # step counter state
 
@@ -888,6 +884,11 @@ class Trainer(object):
         batch_text_embed = self.text_encoder(**batch_text_ids).last_hidden_state
         return batch_text_embed
 
+    def sample(self, x_conds, batch_text, batch_size=1):
+        device = self.device
+        task_embeds = self.encode_batch_text(batch_text)
+        return self.model.sample(x_conds.to(device), task_embeds.to(device), batch_size=batch_size)
+
     def train(self):
         accelerator = self.accelerator
         device = accelerator.device
@@ -901,7 +902,10 @@ class Trainer(object):
                 for _ in range(self.gradient_accumulate_every):
                     x, x_cond, goal = next(self.dl)
                     x, x_cond = x.to(device), x_cond.to(device)
+
                     goal_embed = self.encode_batch_text(goal)
+                    ### zero whole goal_embed if p < self.cond_drop_chance
+                    goal_embed = goal_embed * (torch.rand(goal_embed.shape[0], 1, 1, device = goal_embed.device) > self.cond_drop_chance).float()
 
 
                     with self.accelerator.autocast():
@@ -909,11 +913,16 @@ class Trainer(object):
                         loss = loss / self.gradient_accumulate_every
                         total_loss += loss.item()
 
-                    self.accelerator.backward(loss)
-
+                        self.accelerator.backward(loss)
 
                 accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
-                pbar.set_description(f'loss: {total_loss:.4f}')
+
+                ### get maximum gradient from model
+                # max_grad = max([torch.max(torch.abs(p.grad)) for p in self.model.parameters() if p.grad is not None])
+
+                scale = self.accelerator.scaler.get_scale()
+                
+                pbar.set_description(f'loss: {total_loss:.4E}, loss scale: {scale:.1E}')
 
                 accelerator.wait_for_everyone()
 
@@ -941,44 +950,37 @@ class Trainer(object):
                                 x_conds.append(x_cond.to(device))
                                 task_embeds.append(self.encode_batch_text(label))
                             
-                            all_xs_list = list(map(lambda n, c, e: self.ema.ema_model.sample(batch_size=n, x_cond=c, task_embed=e), batches, x_conds, task_embeds))
+                            with self.accelerator.autocast():
+                                all_xs_list = list(map(lambda n, c, e: self.ema.ema_model.sample(batch_size=n, x_cond=c, task_embed=e), batches, x_conds, task_embeds))
                         
                         print_gpu_utilization()
                         
-                        gt_xs = torch.cat(xs, dim = 0)
+                        gt_xs = torch.cat(xs, dim = 0) # [batch_size, 3*n, 120, 160]
+                        # make it [batchsize*n, 3, 120, 160]
+                        n_rows = gt_xs.shape[1] // 3
+                        gt_xs = rearrange(gt_xs, 'b (n c) h w -> b n c h w', n=n_rows)
+                        ### save images
                         x_conds = torch.cat(x_conds, dim = 0).detach().cpu()
+                        # x_conds = rearrange(x_conds, 'b (n c) h w -> b n c h w', n=1)
                         all_xs = torch.cat(all_xs_list, dim = 0).detach().cpu()
-                        
-                        ### tensor2vector visualizations
-                        gt_colors = torch.stack([torch.from_numpy(flow_tensor_to_image((gt_x-0.5)*1000)) for gt_x in gt_xs]) / 255
-                        all_colors = torch.stack([torch.from_numpy(flow_tensor_to_image((all_x-0.5)*1000)) for all_x in all_xs]) / 255
-                        
-                        gt_xs = tensors2vectors(gt_xs)
-                        all_xs = tensors2vectors(all_xs)
-                        # loss_fn = nn.MSELoss()
-                        # loss = loss_fn(all_flows, gt_flows).item()
-                        # self.writer.add_scalar('val_loss', loss, self.step)
-                        # accelerator.print(f'flow_loss: {loss:.4f}')
+                        all_xs = rearrange(all_xs, 'b (n c) h w -> b n c h w', n=n_rows)
+
+                        gt_first = gt_xs[:, :1]
+                        gt_last = gt_xs[:, -1:]
+
+
 
                         if self.step == self.save_and_sample_every:
                             os.makedirs(str(self.results_folder / f'imgs'), exist_ok = True)
-                            utils.save_image(x_conds, str(self.results_folder / f'imgs/x_conds.png'), nrow = int(math.sqrt(self.num_samples)))
-                            utils.save_image(gt_xs, str(self.results_folder / f'imgs/gt_xs.png'), nrow = int(math.sqrt(self.num_samples)))
-                            utils.save_image(gt_colors, str(self.results_folder / f'imgs/gt_colors.png'), nrow = int(math.sqrt(self.num_samples)))
+                            gt_img = torch.cat([gt_first, gt_last, gt_xs], dim=1)
+                            gt_img = rearrange(gt_img, 'b n c h w -> (b n) c h w', n=n_rows+2)
+                            utils.save_image(gt_img, str(self.results_folder / f'imgs/gt_img.png'), nrow=n_rows+2)
 
                         os.makedirs(str(self.results_folder / f'imgs/outputs'), exist_ok = True)
-                        utils.save_image(all_xs, str(self.results_folder / f'imgs/outputs/sample_{milestone}.png'), nrow = int(math.sqrt(self.num_samples)))
-                        utils.save_image(all_colors, str(self.results_folder / f'imgs/outputs/color_{milestone}.png'), nrow = int(math.sqrt(self.num_samples)))
+                        pred_img = torch.cat([gt_first, gt_last,  all_xs], dim=1)
+                        pred_img = rearrange(pred_img, 'b n c h w -> (b n) c h w', n=n_rows+2)
+                        utils.save_image(pred_img, str(self.results_folder / f'imgs/outputs/sample-{milestone}.png'), nrow=n_rows+2)
 
-
-                        #     os.makedirs(str(self.results_folder / f'imgs'), exist_ok = True)
-                        #     gt_flow_imgs = [torch.from_numpy(flow_tensor_to_image((gt_flow-0.5)*1000))/255 for gt_flow in gt_flows]
-                        #     print(max(gt_flow_imgs[0].numpy().flatten()))
-                        #     utils.save_image(gt_flow_imgs, str(self.results_folder / f'imgs/gt_flow.png'), nrow = int(math.sqrt(self.num_samples)))
-                        #     utils.save_image(imgs, str(self.results_folder / f'imgs/gt_img.png'), nrow = int(math.sqrt(self.num_samples)))
-                        # all_flow_imgs = [torch.from_numpy(flow_tensor_to_image((flow-0.5)*1000))/255 for flow in all_flows]
-                        # os.makedirs(str(self.results_folder / f'imgs/outputs'), exist_ok = True)
-                        # utils.save_image(all_flow_imgs, str(self.results_folder / f'imgs/outputs/sample-{milestone}.png'), nrow = int(math.sqrt(self.num_samples)))
                         self.save(milestone)
 
                         # whether to calculate fid

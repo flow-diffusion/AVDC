@@ -4,9 +4,9 @@ import torch
 from einops import repeat, rearrange
 
 
-class Unet0411(nn.Module):
+class UnetBridge(nn.Module):
     def __init__(self):
-        super(Unet0411, self).__init__()
+        super(UnetBridge, self).__init__()
 
         self.unet = UNetModel(
             image_size=(48, 64),
@@ -35,42 +35,10 @@ class Unet0411(nn.Module):
         x = torch.cat([x, x_cond], dim=1)
         out = self.unet(x, t, task_embed, **kwargs)
         return rearrange(out, 'b c f h w -> b (f c) h w')
-    
-class Unet0425(nn.Module):
-    def __init__(self):
-        super(Unet0425, self).__init__()
 
-        self.unet = UNetModel(
-            image_size=(128, 128),
-            in_channels=6,
-            model_channels=64,
-            out_channels=3,
-            num_res_blocks=2,
-            attention_resolutions=(-1, ),
-            dropout=0,
-            channel_mult=(1, 2, 4, 8),
-            conv_resample=True,
-            dims=3,
-            num_classes=None,
-            task_tokens=True,
-            task_token_channels=512,
-            use_checkpoint=False,
-            use_fp16=False,
-            num_head_channels=32,
-        )
-        self.unet.convert_to_fp32()
-
-    def forward(self, x, t, task_embed=None, **kwargs):
-        cf = x.shape[1] // 2
-        x_cond = rearrange(x[:, cf:], 'b (f c) h w -> b c f h w', c=3)
-        x = rearrange(x[:, :cf], 'b (f c) h w -> b c f h w', c=3)
-        x = torch.cat([x, x_cond], dim=1)
-        out = self.unet(x, t, task_embed, **kwargs)
-        return rearrange(out, 'b c f h w -> b (f c) h w')
-    
-class Unet0513(nn.Module):
+class UnetMW(nn.Module):
     def __init__(self):
-        super(Unet0513, self).__init__()
+        super(UnetMW, self).__init__()
         self.unet = UNetModel(
             image_size=(128, 128),
             in_channels=6,
@@ -97,9 +65,9 @@ class Unet0513(nn.Module):
         out = self.unet(x, t, task_embed, **kwargs)
         return rearrange(out, 'b c f h w -> b (f c) h w')
       
-class Unet0513_flow(nn.Module):
+class UnetMW_flow(nn.Module):
     def __init__(self):
-        super(Unet0513_flow, self).__init__()
+        super(UnetMW_flow, self).__init__()
         self.unet = UNetModel(
             image_size=(128, 128),
             in_channels=5,
@@ -126,9 +94,9 @@ class Unet0513_flow(nn.Module):
         out = self.unet(x, t, task_embed, **kwargs)
         return rearrange(out, 'b c f h w -> b (f c) h w')
     
-class Unet0526(nn.Module):
+class UnetThor(nn.Module):
     def __init__(self):
-        super(Unet0526, self).__init__()
+        super(UnetThor, self).__init__()
 
         self.unet = UNetModel(
             image_size=(64, 64),

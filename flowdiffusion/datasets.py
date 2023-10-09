@@ -222,7 +222,7 @@ class SSRDatasetVal(SequentialDatasetVal):
         task = self.tasks[idx]
         return x, x_cond, task
     
-class MySeqDataset0513(SequentialDataset):
+class MySeqDatasetMW(SequentialDataset):
     def __init__(self, path="../datasets/dataset_0513", sample_per_seq=8, target_size=(64, 64)):
         print("Preparing dataset...")
         self.sample_per_seq = sample_per_seq
@@ -410,7 +410,7 @@ class SequentialNavDataset(Dataset):
         #     print(e)
         #     return self.__getitem__(idx + 1 % self.__len__())
 
-class MySeqDataset0606(SequentialDataset):
+class MySeqDatasetReal(SequentialDataset):
     def __init__(self, path="../datasets/dataset_0606/processed_data", sample_per_seq=7, target_size=(48, 64)):
         print("Preparing dataset...")
         self.sample_per_seq = sample_per_seq
