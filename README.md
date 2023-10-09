@@ -53,7 +53,7 @@ The trained model should be saved in `../results` folder
 To resume training, you can use `-c --checkpoint_num` argument.  
 ```bash
 # This will resume training with 1st checkpoint (should be named as model-1.pt)
-python train_mw.py --mode train --c 1
+python train_mw.py --mode train -c 1
 ```
 
 
