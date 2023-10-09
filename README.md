@@ -1,13 +1,13 @@
-# flow-diffusion
+## flow-diffusion
 
-This is the official codebase for our work []()
-
-
+This is the official codebase for our work [Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/). 
 
 
 
 
-# Acknowledgements
+
+
+## Acknowledgements
 
 This codebase is modified from the following repositories:  
 [imagen-pytorch](https://github.com/lucidrains/imagen-pytorch)  
