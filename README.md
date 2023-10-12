@@ -5,7 +5,7 @@ The official codebase for training video policies in AVDC
 https://github.com/flow-diffusion/flow-diffusion/assets/43379407/065ef3b2-44e8-4af0-8c26-a70e6d080aed
 
 This repository contains the code for training video policies presented in our work   
-[Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/)
+[Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/)  
 [Po-Chen Ko](https://pochen-ko.github.io/),
 [Jiayuan Mao](https://jiayuanm.com/),
 [Yilun Du](https://yilundu.github.io/),
