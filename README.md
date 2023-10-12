@@ -17,9 +17,11 @@ conda activate avdc
 conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 ```  
 
-Next, install the requirements  
+Next, clone the repository and install the requirements  
 
 ```bash
+git clone https://github.com/flow-diffusion/flow-diffusion
+cd flow-diffusion
 pip install -r requirements.txt
 ```
 
@@ -56,7 +58,6 @@ To resume training, you can use `-c` `--checkpoint_num` argument.
 python train_mw.py --mode train -c 1
 ```
 
-
 ## Inferencing
 
 Use the following arguments for inference  
@@ -67,6 +68,30 @@ For example:
 ```bash
 python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly
 ```
+
+## Pretrained models 
+
+We also provide checkpoints of the models described in our experiments as following.   
+[Meta-World](https://huggingface.co/Po-Chen/flowdiffusion/resolve/main/ckpts/metaworld/model-24.pt) |  [iTHOR](https://huggingface.co/Po-Chen/flowdiffusion/resolve/main/ckpts/ithor/model-30.pt) | [Bridge](https://huggingface.co/Po-Chen/flowdiffusion/resolve/main/ckpts/bridge/model-42.pt)   
+
+Download and put the .pt file in `results/[environment]` folder. The resulting directory structure should be `results/{mw, thor, bridge}/model-[x].pt`, for example `results/mw/model-24.pt`
+
+Or use `download.sh`
+```bash
+./download.sh metaworld
+# ./download.sh ithor
+# ./download.sh bridge
+```
+
+After this, you can use argument `-c [x]` to resume training or inference with our checkpoint. For example:  
+```bash
+python train_mw.py --mode train -c 24
+```
+Or  
+```bash
+python train_mw.py --mode inference -c 24 -p ../examples/assembly.png -t assembly
+```
+
 
 
 ## Acknowledgements

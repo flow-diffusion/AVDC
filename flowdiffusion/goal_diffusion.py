@@ -666,40 +666,6 @@ class GoalGaussianDiffusion(nn.Module):
         img = self.normalize(img)
         return self.p_losses(img, t, img_cond, task_embed)
 
-# dataset classes
-
-# class Dataset(Dataset):
-#     def __init__(
-#         self,
-#         folder,
-#         image_size,
-#         exts = ['jpg', 'jpeg', 'png', 'tiff'],
-#         augment_horizontal_flip = False,
-#         convert_image_to = None
-#     ):
-#         super().__init__()
-#         self.folder = folder
-#         self.image_size = image_size
-#         self.paths = [p for ext in exts for p in Path(f'{folder}').glob(f'**/*.{ext}')]
-
-#         maybe_convert_fn = partial(convert_image_to_fn, convert_image_to) if exists(convert_image_to) else nn.Identity()
-
-    #     self.transform = T.Compose([
-    #         T.Lambda(maybe_convert_fn),
-    #         T.Resize(image_size),
-    #         T.RandomHorizontalFlip() if augment_horizontal_flip else nn.Identity(),
-    #         T.CenterCrop(image_size),
-    #         T.ToTensor()
-    #     ])
-
-    # def __len__(self):
-    #     return len(self.paths)
-
-    # def __getitem__(self, index):
-    #     path = self.paths[index]
-    #     img = Image.open(path)
-    #     return self.transform(img)
-
 # trainer class
 
 class Trainer(object):
@@ -855,29 +821,6 @@ class Trainer(object):
         if exists(self.accelerator.scaler) and exists(data['scaler']):
             self.accelerator.scaler.load_state_dict(data['scaler'])
 
-    # @torch.no_grad()
-    # def calculate_activation_statistics(self, samples):
-    #     assert exists(self.inception_v3)
-
-    #     features = self.inception_v3(samples)[0]
-    #     features = rearrange(features, '... 1 1 -> ...')
-
-    #     mu = torch.mean(features, dim = 0).cpu()
-    #     sigma = torch.cov(features).cpu()
-    #     return mu, sigma
-
-    # def fid_score(self, real_samples, fake_samples):
-
-    #     if self.channels == 1:
-    #         real_samples, fake_samples = map(lambda t: repeat(t, 'b 1 ... -> b c ...', c = 3), (real_samples, fake_samples))
-
-    #     min_batch = min(real_samples.shape[0], fake_samples.shape[0])
-    #     real_samples, fake_samples = map(lambda t: t[:min_batch], (real_samples, fake_samples))
-
-    #     m1, s1 = self.calculate_activation_statistics(real_samples)
-    #     m2, s2 = self.calculate_activation_statistics(fake_samples)
-
-    #     fid_value = calculate_frechet_distance(m1, s1, m2, s2)
     #     return fid_value
     def encode_batch_text(self, batch_text):
         batch_text_ids = self.tokenizer(batch_text, return_tensors = 'pt', padding = True, truncation = True, max_length = 128).to(self.device)
@@ -916,9 +859,6 @@ class Trainer(object):
                         self.accelerator.backward(loss)
 
                 accelerator.clip_grad_norm_(self.model.parameters(), 1.0)
-
-                ### get maximum gradient from model
-                # max_grad = max([torch.max(torch.abs(p.grad)) for p in self.model.parameters() if p.grad is not None])
 
                 scale = self.accelerator.scaler.get_scale()
                 
@@ -982,13 +922,6 @@ class Trainer(object):
                         utils.save_image(pred_img, str(self.results_folder / f'imgs/outputs/sample-{milestone}.png'), nrow=n_rows+2)
 
                         self.save(milestone)
-
-                        # whether to calculate fid
-
-                        # data = 
-                        # if exists(self.inception_v3):
-                        #     fid_score = self.fid_score(real_samples = data, fake_samples = all_images)
-                        #     accelerator.print(f'fid_score: {fid_score}')
 
                 pbar.update(1)
 

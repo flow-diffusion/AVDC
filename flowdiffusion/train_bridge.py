@@ -100,10 +100,10 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--mode', type=str, default='train', choices=['train', 'inference']) # set to 'inference' to generate samples
-    parser.add_argument('-c', '--checkpoint_num', type=int, default=None) # set to checkpoint number to resume training or generate samples
-    parser.add_argument('-p', '--inference_path', type=str, default=None) # set to path to generate samples
-    parser.add_argument('-t', '--text', type=str, default=None) # set to text to generate samples
+    parser.add_argument('-m', '--mode', type=str, default='train', choices=['train', 'inference']) # 'train for training, 'inference' for generating samples
+    parser.add_argument('-c', '--checkpoint_num', type=int, default=None) # checkpoint number to resume training or generate samples
+    parser.add_argument('-p', '--inference_path', type=str, default=None) # path to input image
+    parser.add_argument('-t', '--text', type=str, default=None) # task text 
     args = parser.parse_args()
     if args.mode == 'inference':
         assert args.checkpoint_num is not None

@@ -399,16 +399,12 @@ class SequentialNavDataset(Dataset):
         return self.num_frames
     
     def __getitem__(self, idx):
-        # try:
-            samples = self.get_samples(idx)
-            images = self.transform([Image.open(s) for s in samples]) # [c f h w]
-            x_cond = images[:, 0] # first frame
-            x = rearrange(images[:, 1:], "c f h w -> (f c) h w") # all other frames
-            task = self.tasks[self.frameid2seqid[idx]]
-            return x, x_cond, task
-        # except Exception as e:
-        #     print(e)
-        #     return self.__getitem__(idx + 1 % self.__len__())
+        samples = self.get_samples(idx)
+        images = self.transform([Image.open(s) for s in samples]) # [c f h w]
+        x_cond = images[:, 0] # first frame
+        x = rearrange(images[:, 1:], "c f h w -> (f c) h w") # all other frames
+        task = self.tasks[self.frameid2seqid[idx]]
+        return x, x_cond, task
 
 class MySeqDatasetReal(SequentialDataset):
     def __init__(self, path="../datasets/dataset_0606/processed_data", sample_per_seq=7, target_size=(48, 64)):
