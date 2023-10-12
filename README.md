@@ -1,10 +1,26 @@
-## flow-diffusion  
+## AVDC
 
-This repository contains the code for training video policies presented in our work [Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/). 
-
-[website](https://flow-diffusion.github.io/) | [arXiv]() | [paper]()
+The official codebase for training video policies in AVDC
 
 https://github.com/flow-diffusion/flow-diffusion/assets/43379407/065ef3b2-44e8-4af0-8c26-a70e6d080aed
+
+This repository contains the code for training video policies presented in our work   
+[Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/)
+[Po-Chen Ko](https://pochen-ko.github.io/),
+[Jiayuan Mao](https://jiayuanm.com/),
+[Yilun Du](https://yilundu.github.io/),
+[Shao-Hua Sun](https://shaohua0116.github.io/),
+[Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)
+[website](https://flow-diffusion.github.io/) | [arXiv]() | [paper]()
+
+```bib
+@article{Ko2023Learning,
+  title={{Learning to Act from Actionless Video through Dense Correspondences}},
+  author={Ko, Po-Chen and Mao, Jiayuan and Du, Yilun and Sun, Shao-Hua and Tenenbaum, Joshua B},
+  journal={arXiv preprint},
+  year={2023},
+}
+```
 
 
 ## Getting started  
