@@ -10,7 +10,7 @@ This repository contains the code for training video policies presented in our w
 [Jiayuan Mao](https://jiayuanm.com/),
 [Yilun Du](https://yilundu.github.io/),
 [Shao-Hua Sun](https://shaohua0116.github.io/),
-[Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)
+[Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)  
 [website](https://flow-diffusion.github.io/) | [arXiv]() | [paper]()
 
 ```bib
