@@ -11,7 +11,7 @@ This repository contains the code for training video policies presented in our w
 [Yilun Du](https://yilundu.github.io/),
 [Shao-Hua Sun](https://shaohua0116.github.io/),
 [Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)  
-[website](https://flow-diffusion.github.io/) | [arXiv]() | [paper]()
+[website](https://flow-diffusion.github.io/) | [paper](https://flow-diffusion.github.io/AVDC.pdf)| [arXiv](https://arxiv.org/abs/2310.08576)
 
 ```bib
 @article{Ko2023Learning,
@@ -36,8 +36,8 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 Next, clone the repository and install the requirements  
 
 ```bash
-git clone https://github.com/flow-diffusion/flow-diffusion
-cd flow-diffusion
+git clone https://github.com/flow-diffusion/AVDC
+cd AVDC
 pip install -r requirements.txt
 ```
 
