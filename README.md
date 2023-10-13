@@ -11,7 +11,7 @@ This repository contains the code for training video policies presented in our w
 [Yilun Du](https://yilundu.github.io/),
 [Shao-Hua Sun](https://shaohua0116.github.io/),
 [Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)  
-[website](https://flow-diffusion.github.io/) | [paper](https://flow-diffusion.github.io/AVDC.pdf)| [arXiv](https://arxiv.org/abs/2310.08576)
+[website](https://flow-diffusion.github.io/) | [paper](https://flow-diffusion.github.io/AVDC.pdf) | [arXiv](https://arxiv.org/abs/2310.08576)
 
 ```bib
 @article{Ko2023Learning,
