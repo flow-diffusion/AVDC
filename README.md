@@ -17,7 +17,7 @@ This repository contains the code for training video policies presented in our w
 @article{Ko2023Learning,
   title={{Learning to Act from Actionless Video through Dense Correspondences}},
   author={Ko, Po-Chen and Mao, Jiayuan and Du, Yilun and Sun, Shao-Hua and Tenenbaum, Joshua B},
-  journal={arXiv preprint},
+  journal={arXiv:2310.08576},
   year={2023},
 }
 ```
