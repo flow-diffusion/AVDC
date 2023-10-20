@@ -244,8 +244,8 @@ class MySeqDatasetMW(SequentialDataset):
         print("Done")
 
 ### Randomly sample, from any intermediate to the last frame
-included_tasks = ["door-open", "door-close", "basketball", "shelf-place", "button-press", "button-press-topdown", "faucet-close", "faucet-open", "handle-press", "hammer", "assembly"]
-included_idx = [i for i in range(5)]
+# included_tasks = ["door-open", "door-close", "basketball", "shelf-place", "button-press", "button-press-topdown", "faucet-close", "faucet-open", "handle-press", "hammer", "assembly"]
+# included_idx = [i for i in range(5)]
 class SequentialDatasetv2(Dataset):
     def __init__(self, path="../datasets/valid", sample_per_seq=7, target_size=(128, 128), frameskip=None, randomcrop=False):
         print("Preparing dataset...")
@@ -259,8 +259,8 @@ class SequentialDatasetv2(Dataset):
         for seq_dir in sequence_dirs:
             task = seq_dir.split("/")[-4]
             seq_id= int(seq_dir.split("/")[-2])
-            if task not in included_tasks or seq_id not in included_idx:
-                continue
+            # if task not in included_tasks or seq_id not in included_idx:
+            #     continue
             seq = sorted(glob(f"{seq_dir}*.png"), key=lambda x: int(x.split("/")[-1].rstrip(".png")))
             self.sequences.append(seq)
             self.tasks.append(seq_dir.split("/")[-4].replace("-", " "))
@@ -325,8 +325,8 @@ class SequentialFlowDataset(Dataset):
         for seq_dir in sequence_dirs:
             task = seq_dir.split("/")[-4]
             seq_id= int(seq_dir.split("/")[-2])
-            if task not in included_tasks or seq_id not in included_idx:
-                continue
+            # if task not in included_tasks or seq_id not in included_idx:
+            #     continue
             seq = sorted(glob(f"{seq_dir}*.png"), key=lambda x: int(x.split("/")[-1].rstrip(".png")))
             flows = sorted(glob(f"{seq_dir}flow/*.npy"))
             self.sequences.append(seq)
