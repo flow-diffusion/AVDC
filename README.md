@@ -22,6 +22,9 @@ This repository contains the code for training video policies presented in our w
 }
 ```
 
+## Updates  
+ - 2023/10/21: Support custom task name and any number of videos (Removed task/# of vid constraints leftover from our experiments) 
+
 
 ## Getting started  
 
