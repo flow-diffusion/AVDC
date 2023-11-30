@@ -830,7 +830,7 @@ class Trainer(object):
     def sample(self, x_conds, batch_text, batch_size=1):
         device = self.device
         task_embeds = self.encode_batch_text(batch_text)
-        return self.model.sample(x_conds.to(device), task_embeds.to(device), batch_size=batch_size)
+        return self.ema.ema_model.sample(x_conds.to(device), task_embeds.to(device), batch_size=batch_size)
 
     def train(self):
         accelerator = self.accelerator

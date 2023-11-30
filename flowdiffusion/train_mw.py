@@ -77,8 +77,10 @@ def main(args):
         text = args.text
         image = Image.open(args.inference_path)
         batch_size = 1
+        ### 231130 fixed center crop issue 
         transform = transforms.Compose([
-            transforms.Resize(target_size),
+            transforms.Resize((240, 320)),
+            transforms.CenterCrop(target_size),
             transforms.ToTensor(),
         ])
         image = transform(image)

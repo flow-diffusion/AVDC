@@ -47,7 +47,7 @@ def main(args):
         loss_type='l2',
         objective='pred_v',
         beta_schedule = 'cosine',
-        min_snr_loss_weight = False,
+        min_snr_loss_weight = True,
     )
 
     trainer = Trainer(
@@ -95,6 +95,10 @@ def main(args):
         root, ext = splitext(args.inference_path)
         output_gif = root + '_out.gif'
         output = (output.cpu().numpy().transpose(0, 2, 3, 1).clip(0, 1) * 255).astype('uint8')
+
+        ## 231130 resize output image to 240x320 to make it look better
+        output = [np.array(Image.fromarray(frame).resize((320, 240))) for frame in output]
+
         imageio.mimsave(output_gif, output, duration=200, loop=1000)
         print(f'Generated {output_gif}')
 
