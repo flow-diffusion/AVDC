@@ -2,6 +2,8 @@
 
 The official codebase for training video policies in AVDC
 
+NEWS: We have released another repository for running our Meta-World and iTHOR experiments [here](https://github.com/flow-diffusion/AVDC_experiments/)!
+
 https://github.com/flow-diffusion/flow-diffusion.github.io/assets/43379407/9aa380df-0ff7-4c41-af2d-d67d23c53e72
 
 This repository contains the code for training video policies presented in our work   
@@ -11,7 +13,7 @@ This repository contains the code for training video policies presented in our w
 [Yilun Du](https://yilundu.github.io/),
 [Shao-Hua Sun](https://shaohua0116.github.io/),
 [Joshua B. Tenenbaum](https://cocosci.mit.edu/josh)  
-[website](https://flow-diffusion.github.io/) | [paper](https://flow-diffusion.github.io/AVDC.pdf) | [arXiv](https://arxiv.org/abs/2310.08576)
+[website](https://flow-diffusion.github.io/) | [paper](https://flow-diffusion.github.io/AVDC.pdf) | [arXiv](https://arxiv.org/abs/2310.08576) | [experiment repo](https://github.com/flow-diffusion/AVDC_experiments/)
 
 ```bib
 @article{Ko2023Learning,
@@ -21,10 +23,9 @@ This repository contains the code for training video policies presented in our w
   year={2023},
 }
 ```
-
 ## Updates  
  - 2023/10/21: Support custom task name and any number of videos (Removed task/# of vid constraints leftover from our experiments) 
-
+ - 2024/01/02: Released another repository for Meta-World and iTHOR experiments [here](https://github.com/flow-diffusion/AVDC_experiments/).
 
 ## Getting started  
 
