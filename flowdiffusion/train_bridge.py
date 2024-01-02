@@ -43,7 +43,7 @@ def main(args):
         model=unet,
         image_size=target_size,
         timesteps=100,
-        sampling_timesteps=100,
+        sampling_timesteps=args.sample_steps,
         loss_type='l2',
         objective='pred_v',
         beta_schedule = 'cosine',
@@ -108,10 +108,12 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--checkpoint_num', type=int, default=None) # checkpoint number to resume training or generate samples
     parser.add_argument('-p', '--inference_path', type=str, default=None) # path to input image
     parser.add_argument('-t', '--text', type=str, default=None) # task text 
+    parser.add_argument('-g', '--guidance_weight', type=int, default=0) # set to positive to use guidance
     args = parser.parse_args()
     if args.mode == 'inference':
         assert args.checkpoint_num is not None
         assert args.inference_path is not None
         assert args.text is not None
+        assert args.sample_steps <= 100
     main(args)
 

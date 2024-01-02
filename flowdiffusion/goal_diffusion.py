@@ -481,13 +481,20 @@ class GoalGaussianDiffusion(nn.Module):
         posterior_log_variance_clipped = extract(self.posterior_log_variance_clipped, t, x_t.shape)
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def model_predictions(self, x, t, x_cond, task_embed,  clip_x_start=False, rederive_pred_noise=False):
+    def model_predictions(self, x, t, x_cond, task_embed,  clip_x_start=False, rederive_pred_noise=False, guidance_weight=0):
         # task_embed = self.text_encoder(goal).last_hidden_state
         model_output = self.model(torch.cat([x, x_cond], dim=1), t, task_embed)
+        if guidance_weight > 0.0:
+            uncond_model_output = self.model(torch.cat([x, x_cond], dim=1), t, task_embed*0.0)
+
         maybe_clip = partial(torch.clamp, min = -1., max = 1.) if clip_x_start else identity
 
         if self.objective == 'pred_noise':
-            pred_noise = model_output
+            if guidance_weight == 0:
+                pred_noise = model_output
+            else:
+                pred_noise = (1 + guidance_weight)*model_output - guidance_weight*uncond_model_output
+
             x_start = self.predict_start_from_noise(x, t, pred_noise)
             x_start = maybe_clip(x_start)
 
@@ -497,18 +504,36 @@ class GoalGaussianDiffusion(nn.Module):
         elif self.objective == 'pred_x0':
             x_start = model_output
             x_start = maybe_clip(x_start)
-            pred_noise = self.predict_noise_from_start(x, t, x_start)
 
+            if guidance_weight == 0:
+                pred_noise = self.predict_noise_from_start(x, t, x_start)
+            else:
+                uncond_x_start = uncond_model_output
+                uncond_x_start = maybe_clip(uncond_x_start)
+                cond_noise = self.predict_noise_from_start(x, t, x_start)
+                uncond_noise = self.predict_noise_from_start(x, t, uncond_x_start)
+                pred_noise = (1 + guidance_weight)*cond_noise - guidance_weight*uncond_noise
+                x_start = self.predict_start_from_noise(x, t, pred_noise)
+            
         elif self.objective == 'pred_v':
             v = model_output
             x_start = self.predict_start_from_v(x, t, v)
             x_start = maybe_clip(x_start)
-            pred_noise = self.predict_noise_from_start(x, t, x_start)
+            
+            if guidance_weight == 0:
+                pred_noise = self.predict_noise_from_start(x, t, x_start)
+            else:
+                uncond_v = uncond_model_output
+                uncond_x_start = self.predict_start_from_v(x, t, uncond_v)
+                uncond_noise = self.predict_noise_from_start(x, t, uncond_x_start)
+                cond_noise = self.predict_noise_from_start(x, t, x_start)
+                pred_noise = (1 + guidance_weight)*cond_noise - guidance_weight*uncond_noise
+                x_start = self.predict_start_from_noise(x, t, pred_noise)
 
         return ModelPrediction(pred_noise, x_start)
 
-    def p_mean_variance(self, x, t, x_cond, task_embed,  clip_denoised = False):
-        preds = self.model_predictions(x, t, x_cond, task_embed)
+    def p_mean_variance(self, x, t, x_cond, task_embed,  clip_denoised=False, guidance_weight=0):
+        preds = self.model_predictions(x, t, x_cond, task_embed, guidance_weight=guidance_weight)
         x_start = preds.pred_x_start
 
         if clip_denoised:
@@ -518,16 +543,16 @@ class GoalGaussianDiffusion(nn.Module):
         return model_mean, posterior_variance, posterior_log_variance, x_start
 
     @torch.no_grad()
-    def p_sample(self, x, t: int, x_cond, task_embed):
+    def p_sample(self, x, t: int, x_cond, task_embed, guidance_weight=0):
         b, *_, device = *x.shape, x.device
         batched_times = torch.full((b,), t, device = x.device, dtype = torch.long)
-        model_mean, _, model_log_variance, x_start = self.p_mean_variance(x, batched_times, x_cond, task_embed, clip_denoised = True)
+        model_mean, _, model_log_variance, x_start = self.p_mean_variance(x, batched_times, x_cond, task_embed, clip_denoised = True, guidance_weight=guidance_weight)
         noise = torch.randn_like(x) if t > 0 else 0. # no noise if t == 0
         pred_img = model_mean + (0.5 * model_log_variance).exp() * noise
         return pred_img, x_start
 
     @torch.no_grad()
-    def p_sample_loop(self, shape, x_cond, task_embed, return_all_timesteps=False):
+    def p_sample_loop(self, shape, x_cond, task_embed, return_all_timesteps=False, guidance_weight=0):
         batch, device = shape[0], self.betas.device
 
         img = torch.randn(shape, device=device)
@@ -537,7 +562,7 @@ class GoalGaussianDiffusion(nn.Module):
 
         for t in tqdm(reversed(range(0, self.num_timesteps)), desc = 'sampling loop time step', total = self.num_timesteps):
             # self_cond = x_start if self.self_condition else None
-            img, x_start = self.p_sample(img, t, x_cond, task_embed)
+            img, x_start = self.p_sample(img, t, x_cond, task_embed, guidance_weight=guidance_weight)
             imgs.append(img)
 
         ret = img if not return_all_timesteps else torch.stack(imgs, dim = 1)
@@ -546,7 +571,7 @@ class GoalGaussianDiffusion(nn.Module):
         return ret
 
     @torch.no_grad()
-    def ddim_sample(self, shape, x_cond, task_embed, return_all_timesteps=False):
+    def ddim_sample(self, shape, x_cond, task_embed, return_all_timesteps=False, guidance_weight=0):
         batch, device, total_timesteps, sampling_timesteps, eta, objective = shape[0], self.betas.device, self.num_timesteps, self.sampling_timesteps, self.ddim_sampling_eta, self.objective
 
         times = torch.linspace(-1, total_timesteps - 1, steps = sampling_timesteps + 1)   # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
@@ -561,7 +586,7 @@ class GoalGaussianDiffusion(nn.Module):
         for time, time_next in tqdm(time_pairs, desc = 'sampling loop time step'):
             time_cond = torch.full((batch,), time, device = device, dtype = torch.long)
             # self_cond = x_start if self.self_condition else None
-            pred_noise, x_start, *_ = self.model_predictions(img, time_cond, x_cond, task_embed, clip_x_start = False, rederive_pred_noise = True)
+            pred_noise, x_start, *_ = self.model_predictions(img, time_cond, x_cond, task_embed, clip_x_start = False, rederive_pred_noise = True, guidance_weight=guidance_weight)
 
             if time_next < 0:
                 img = x_start
@@ -588,10 +613,10 @@ class GoalGaussianDiffusion(nn.Module):
         return ret
 
     @torch.no_grad()
-    def sample(self, x_cond, task_embed, batch_size = 16, return_all_timesteps = False):
+    def sample(self, x_cond, task_embed, batch_size = 16, return_all_timesteps = False, guidance_weight=0):
         image_size, channels = self.image_size, self.channels
         sample_fn = self.p_sample_loop if not self.is_ddim_sampling else self.ddim_sample
-        return sample_fn((batch_size, channels, image_size[0], image_size[1]), x_cond, task_embed,  return_all_timesteps = return_all_timesteps)
+        return sample_fn((batch_size, channels, image_size[0], image_size[1]), x_cond, task_embed,  return_all_timesteps = return_all_timesteps, guidance_weight=guidance_weight)
 
     @torch.no_grad()
     def interpolate(self, x1, x2, t = None, lam = 0.5):
@@ -827,10 +852,10 @@ class Trainer(object):
         batch_text_embed = self.text_encoder(**batch_text_ids).last_hidden_state
         return batch_text_embed
 
-    def sample(self, x_conds, batch_text, batch_size=1):
+    def sample(self, x_conds, batch_text, batch_size=1, guidance_weight=0):
         device = self.device
         task_embeds = self.encode_batch_text(batch_text)
-        return self.ema.ema_model.sample(x_conds.to(device), task_embeds.to(device), batch_size=batch_size)
+        return self.ema.ema_model.sample(x_conds.to(device), task_embeds.to(device), batch_size=batch_size, guidance_weight=guidance_weight)
 
     def train(self):
         accelerator = self.accelerator

@@ -36,7 +36,7 @@ def main(args):
         model=unet,
         image_size=target_size,
         timesteps=100,
-        sampling_timesteps=100,
+        sampling_timesteps=args.sample_steps,
         loss_type='l2',
         objective='pred_v',
         beta_schedule = 'cosine',
@@ -75,6 +75,7 @@ def main(args):
         import torch
         from os.path import splitext
         text = args.text
+        guidance_weight = args.guidance_weight
         image = Image.open(args.inference_path)
         batch_size = 1
         ### 231130 fixed center crop issue 
@@ -84,7 +85,7 @@ def main(args):
             transforms.ToTensor(),
         ])
         image = transform(image)
-        output = trainer.sample(image.unsqueeze(0), [text], batch_size).cpu()
+        output = trainer.sample(image.unsqueeze(0), [text], batch_size, guidance_weight).cpu()
         output = output[0].reshape(-1, 3, *target_size)
         output = torch.cat([image.unsqueeze(0), output], dim=0)
         root, ext = splitext(args.inference_path)
@@ -99,9 +100,12 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--checkpoint_num', type=int, default=None) # set to checkpoint number to resume training or generate samples
     parser.add_argument('-p', '--inference_path', type=str, default=None) # set to path to generate samples
     parser.add_argument('-t', '--text', type=str, default=None) # set to text to generate samples
+    parser.add_argument('-n', '--sample_steps', type=int, default=100) # set to number of steps to sample
+    parser.add_argument('-g', '--guidance_weight', type=int, default=0) # set to positive to use guidance
     args = parser.parse_args()
     if args.mode == 'inference':
         assert args.checkpoint_num is not None
         assert args.inference_path is not None
         assert args.text is not None
+        assert args.sample_steps <= 100
     main(args)

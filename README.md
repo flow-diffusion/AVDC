@@ -23,9 +23,11 @@ This repository contains the code for training video policies presented in our w
   year={2023},
 }
 ```
+
 ## Updates  
  - 2023/10/21: Support custom task name and any number of videos (Removed task/# of vid constraints leftover from our experiments) 
  - 2024/01/02: Released another repository for Meta-World and iTHOR experiments [here](https://github.com/flow-diffusion/AVDC_experiments/).
+ - 2024/01/03: Updated argumants for DDIM sampling and Classifier-Free Guidance. 
 
 ## Getting started  
 
@@ -82,11 +84,13 @@ python train_mw.py --mode train -c 1
 
 Use the following arguments for inference  
 `-p` `--inference_path`: specify input image path  
-`-t` `--text`: specify the text discription of task  
+`-t` `--text`: specify the text discription of task 
+`-n` `sample_steps` Optional, the number of steps used in test time sampling. If the specified value less than 100, DDIM sampling will be used.
+`-b` `guidance_weight` Optional, The weight used for classifier free guidance. Set to positive to turn on classifier free guidance. 
 
 For example:  
 ```bash
-python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly
+python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly -b 2 -n 20
 ```
 
 ## Pretrained models 
@@ -111,8 +115,6 @@ Or
 ```bash
 python train_mw.py --mode inference -c 24 -p ../examples/assembly.png -t assembly
 ```
-
-
 
 ## Acknowledgements
 
