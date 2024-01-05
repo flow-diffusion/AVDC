@@ -84,13 +84,13 @@ python train_mw.py --mode train -c 1
 
 Use the following arguments for inference  
 `-p` `--inference_path`: specify input image path  
-`-t` `--text`: specify the text discription of task 
-`-n` `sample_steps` Optional, the number of steps used in test time sampling. If the specified value less than 100, DDIM sampling will be used.
-`-b` `guidance_weight` Optional, The weight used for classifier free guidance. Set to positive to turn on classifier free guidance. 
+`-t` `--text`: specify the text discription of task   
+`-n` `sample_steps` Optional, the number of steps used in test time sampling. If the specified value less than 100, DDIM sampling will be used.  
+`-g` `guidance_weight` Optional, The weight used for classifier free guidance. Set to positive to turn on classifier free guidance.   
 
 For example:  
 ```bash
-python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly -b 2 -n 20
+python train_mw.py --mode inference -c 1 -p ../examples/assembly.png -t assembly -g 2 -n 20
 ```
 
 ## Pretrained models 
