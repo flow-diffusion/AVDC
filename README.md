@@ -7,7 +7,7 @@ NEWS: We have released another repository for running our Meta-World and iTHOR e
 https://github.com/flow-diffusion/flow-diffusion.github.io/assets/43379407/9aa380df-0ff7-4c41-af2d-d67d23c53e72
 
 This repository contains the code for training video policies presented in our work   
-[Learning to Act from Actionless Video through Dense Correspondences](https://flow-diffusion.github.io/AVDC.pdf)  
+[Learning to Act from Actionless Videos through Dense Correspondences](https://flow-diffusion.github.io/AVDC.pdf)  
 [Po-Chen Ko](https://pochen-ko.github.io/),
 [Jiayuan Mao](https://jiayuanm.com/),
 [Yilun Du](https://yilundu.github.io/),
@@ -17,7 +17,7 @@ This repository contains the code for training video policies presented in our w
 
 ```bib
 @article{Ko2023Learning,
-  title={{Learning to Act from Actionless Video through Dense Correspondences}},
+  title={{Learning to Act from Actionless Videos through Dense Correspondences}},
   author={Ko, Po-Chen and Mao, Jiayuan and Du, Yilun and Sun, Shao-Hua and Tenenbaum, Joshua B},
   journal={arXiv:2310.08576},
   year={2023},
